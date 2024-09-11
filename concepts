@@ -1,0 +1,33 @@
+@echo off
+title
+color 0A
+
+REM Installing Chocolatey for apt-like package management
+@"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "[System.Net.ServicePointManager]::SecurityProtocol = 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))" && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
+REM Package Selection: https://community.chocolatey.org/packages
+
+REM Disabling anticipated user accounts
+net user administrator /active:no
+net user guest /active:no
+
+REM Enable Firewall for all users
+netsh advfirewall set allprofiles state on
+
+REM Remove anticipated Telnet
+DISM /online /disable-feature /featurename:TelnetClient
+DISM /online /disable-feature /featurename:TelnetServer
+
+REM Telnet
+sc stop "TlntSvr" & sc config "TlntSvr" start= disabled
+
+REM Remote Desktop
+sc stop "TermService" & sc config "TermService" start= disabled
+sc stop "SessionEnv" & sc config "SessionEnv" start= disabled?
+sc stop "UmRdpService" & sc config "UmRdpServiec" start= disabled
+sc stop "RemoteRegistry" & sc config "RemoteRegistry" start= disabled
+REM Do not allow remote connections to this computer
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConenctions /t REG_DWORD /d 1 /f
+
+REM Downloading software to meet requirements
+choco install malwarebytes -y
+choco install ccleaner -y
